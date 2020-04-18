@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.abc.dao.StudentDao">
+    <insert id="insertStudent">
+        insert into student(name, age) values(#{name}, #{age})
+    </insert>
+    <select id="selectById" parameterType="int" resultType="com.abc.bean.Student">
+        select * from `student` where `id` = #{id}
+    </select>
+    <!--这里sql语句必须要是value关键字，不能为其他-->
+    <!--<select id="getStuByAge" parameterType="int" resultType="com.abc.bean.Student">-->
+        <!--select * from `student` where `age` like '%${value}%'-->
+    <!--</select>-->
+    <insert id="insertStu" parameterType="com.abc.pojo.StdPo">
+      <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Integer">
+          SELECT LAST_INSERT_ID()
+      </selectKey>
+        INSERT INTO `student`(`name`,`age`)VALUES (#{name},#{age});
+    </insert>
+
+    <resultMap id="userListResultMap" type="student">
+        <id column="_id" property="id"/>
+        <result column="_name" property="name"/>
+        <result column="_age" property="age"/>
+    </resultMap>
+
+    <select id="getStuByAge" parameterType="int" resultMap="userListResultMap">
+        select id _id,name _name,age _age from `student` where `age` like '%${value}%'
+    </select>
+
+    <resultMap id="orderAndUserRstMap" type="order">
+        <id column="id" property="id"/>
+        <result column="name" property="name"/>
+        <result column="note" property="note"/>
+        <result column="stdId" property="stdId"/>
+        <association property="std" javaType="com.abc.bean.Student">
+            <id column="sId" property="id"/>
+            <result column="stdName" property="name"/>
+            <result column="age" property="age"/>
+        </association>
+    </resultMap>
+    <select id="getOrderInfo" parameterType="int" resultMap="orderAndUserRstMap">
+        SELECT
+          o.id,
+          o.name,
+          o.note,
+          o.stdId,
+          s.id `sId`,
+          s.name `stdName`,
+          s.age
+        FROM
+          `order` o
+        LEFT  JOIN `student` s
+        ON o.stdId = s.id
+        WHERE o.id=#{id}
+    </select>
+
+    <resultMap id="userAndOrderRstMap" type="student">
+        <id column="id" property="id"/>
+        <result column="name" property="name"/>
+        <result column="age" property="age"/>
+        <collection property="ords" ofType="order">
+            <id column="oId" property="id"/>
+            <result column="oName" property="name"/>
+            <result column="note" property="note"/>
+            <result column="stdId" property="stdId"/>
+        </collection>
+    </resultMap>
+    <select id="getStdInfo" parameterType="int" resultMap="userAndOrderRstMap">
+        SELECT
+          s.id,
+          s.name,
+          s.age,
+          o.id `oId`,
+          o.name `oName`,
+          o.note,
+          o.stdId
+        FROM
+          `student` s
+        LEFT JOIN `order` o
+        ON  s.id = o.stdId
+        WHERE s.id=#{id}
+    </select>
+    <select id="getAllStd" resultType="com.abc.bean.Student">
+        select * from student
+    </select>
+
+</mapper>
